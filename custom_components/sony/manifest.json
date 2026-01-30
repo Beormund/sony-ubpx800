@@ -1,6 +1,6 @@
 {
   "domain": "sony",
-  "name": "Sony Legacy API",
+  "name": "Sony UBP-X800",
   "config_flow": true,
   "documentation": "https://github.com/Beormund/sony-ubpx800",
   "issue_tracker": "https://github.com/Beormund/sony-ubpx800/issues",
