@@ -25,12 +25,26 @@ PLATFORMS: list[Platform] = [
 ]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Unfolded Circle Remote from a config entry."""
+    """Set up Sony UBP-X800 from a config entry."""
+
+    # Use .get() to check options first, falling back to entry.data 
+    # This ensures the 'Configure' wheel changes actually take effect.
+    host = entry.options.get(CONF_HOST, entry.data.get(CONF_HOST))
+    app_port = entry.options.get(CONF_APP_PORT, entry.data.get(CONF_APP_PORT))
+    dmr_port = entry.options.get(CONF_DMR_PORT, entry.data.get(CONF_DMR_PORT))
+    ircc_port = entry.options.get(CONF_IRCC_PORT, entry.data.get(CONF_IRCC_PORT))
 
     try:
-        sony_device = SonyDevice(entry.data[CONF_HOST], DEFAULT_DEVICE_NAME,
-                             psk=None, app_port=entry.data[CONF_APP_PORT],
-                             dmr_port=entry.data[CONF_DMR_PORT], ircc_port=entry.data[CONF_IRCC_PORT])
+        sony_device = SonyDevice(
+            host, 
+            DEFAULT_DEVICE_NAME,
+            psk=None, 
+            app_port=app_port,
+            dmr_port=dmr_port, 
+            ircc_port=ircc_port
+        )
+        
+        # PIN and MAC are usually static once paired
         pin = entry.data.get('pin', None)
         sony_device.pin = pin
         sony_device.mac = entry.data.get('mac_address', None)
@@ -38,30 +52,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if pin is None or pin == '0000' or pin == '':
             register_result = await hass.async_add_executor_job(sony_device.register)
             if register_result == AuthenticationResult.PIN_NEEDED:
-                raise ConfigEntryAuthFailed(Exception("Authentication error"))
-        else:
-            pass
+                raise ConfigEntryAuthFailed("PIN Required for Sony Device")
     except Exception as ex:
+        _LOGGER.error("Failed to connect to Sony device at %s: %s", host, ex)
         raise ConfigEntryNotReady(ex) from ex
 
-    _LOGGER.debug("Sony device initialization %s", vars(sony_device))
     coordinator = SonyCoordinator(hass, sony_device)
-
+    
+    # Store both the coordinator and the API for easy access
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         SONY_COORDINATOR: coordinator,
         SONY_API: sony_device,
     }
 
+    # Silence the noisy library logging
     logging.getLogger("sonyapilib").setLevel(logging.CRITICAL)
 
-    # Retrieve info from Remote
-    # Get Basic Device Information
     await coordinator.async_config_entry_first_refresh()
-
-    # Extract activities and activity groups
-    # await coordinator.api.update()
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    
+    # This line ensures that when you click 'Save' in the configuration,
+    # the 'update_listener' below is called to reload the integration.
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
