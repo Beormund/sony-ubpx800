@@ -7,7 +7,7 @@ CONF_NAME = "sony"
 DEVICE_SCAN_INTERVAL = timedelta(seconds=60)
 SONY_COORDINATOR = "sony_coordinator"
 SONY_API = "sony_api"
-DEFAULT_DEVICE_NAME = "Sony Device"
+DEFAULT_DEVICE_NAME = "Sony UBPX800"
 
 CONF_HOST = "host"
 CONF_PIN = "pin"

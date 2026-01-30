@@ -1,0 +1,78 @@
+send_command:
+  name: Send Remote Command
+  description: Sends a specific remote control command to the Sony UBP-X800.
+  target:
+    entity:
+      integration: sony
+      domain: remote
+  fields:
+    command:
+      name: Command
+      description: The name of the command to send.
+      required: true
+      example: "Play"
+      selector:
+        select:
+          options:
+            - "Power"
+            - "Eject"
+            - "Play"
+            - "Stop"
+            - "Pause"
+            - "Rewind"
+            - "Forward"
+            - "Next"
+            - "Prev"
+            - "Replay"
+            - "Advance"
+            - "Up"
+            - "Down"
+            - "Left"
+            - "Right"
+            - "Confirm"
+            - "Return"
+            - "Home"
+            - "Options"
+            - "TopMenu"
+            - "PopUpMenu"
+            - "Display"
+            - "Audio"
+            - "SubTitle"
+            - "Angle"
+            - "Netflix"
+            - "Mode3d"
+            - "Karaoke"
+            - "Favorites"
+            - "Num0"
+            - "Num1"
+            - "Num2"
+            - "Num3"
+            - "Num4"
+            - "Num5"
+            - "Num6"
+            - "Num7"
+            - "Num8"
+            - "Num9"
+            - "Blue"
+            - "Red"
+            - "Green"
+            - "Yellow"
+    num_repeats:
+      name: Repeats
+      description: The number of times to repeat the command.
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 10
+          step: 1
+    delay_secs:
+      name: Delay
+      description: The delay between repeated commands in seconds.
+      default: 0.5
+      selector:
+        number:
+          min: 0
+          max: 5
+          step: 0.1
+          unit_of_measurement: "s"
