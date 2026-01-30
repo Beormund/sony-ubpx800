@@ -79,14 +79,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # Unload platforms
+    # 1. Unload platforms (media_player, remote, etc.)
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    # Disconnect from device
-    if entry.entry_id in hass.data[DOMAIN]:
-        coordinator = hass.data[DOMAIN][entry.entry_id][SONY_COORDINATOR]
-        await coordinator.async_disconnect()
-        del hass.data[DOMAIN][entry.entry_id]
+    # 2. Clean up the data stored in hass.data
+    if unload_ok:
+        if entry.entry_id in hass.data[DOMAIN]:
+            # We remove the entry. The Python garbage collector will 
+            # take care of the coordinator and device objects.
+            hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
