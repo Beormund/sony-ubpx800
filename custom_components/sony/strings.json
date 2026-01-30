@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Sony Player",
+        "description": "Enter the IP address of your Sony UBP-X800. Ensure the player is on and on the Home Screen.",
+        "data": {
+          "host": "IP Address",
+          "pin": "Registration PIN (Leave 0000 for first run)",
+          "app_port": "App Port",
+          "dmr_port": "DMR Port",
+          "ircc_port": "IRCC Port"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid PIN. Please check the TV for a 4-digit code.",
+      "cannot_connect": "Failed to connect. Check the IP address and ensure Remote Start is ON.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This device is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Sony Player",
+        "data": {
+          "host": "IP Address",
+          "app_port": "App Port",
+          "dmr_port": "DMR Port",
+          "ircc_port": "IRCC Port"
+        }
+      }
+    }
+  }
+}
