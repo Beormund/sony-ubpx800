@@ -50,8 +50,10 @@ async def async_setup_entry(
     )
 
 class SonyRemoteEntity(CoordinatorEntity[SonyCoordinator], RemoteEntity):
-    # pylint: disable=too-many-instance-attributes
     """Representation of a Sony mediaplayer."""
+    _attr_has_entity_name = True
+    _attr_name = "Remote"
+    _attr_icon = "mdi:remote-tv"
     _attr_supported_features = RemoteEntityFeature.ACTIVITY
 
     def __init__(self, coordinator):
@@ -62,12 +64,12 @@ class SonyRemoteEntity(CoordinatorEntity[SonyCoordinator], RemoteEntity):
         """
         super().__init__(coordinator)
         self.coordinator = coordinator
-        self._name = f"{DEFAULT_DEVICE_NAME} Remote"
-        self._attr_icon = "mdi:remote-tv"
-        self._attr_native_value = "OFF"
-        self._state = STATE_OFF
-        self._unique_id = ENTITY_ID_FORMAT.format(
-            f"{self.coordinator.api.host}_Remote")
+
+        # Clean the MAC address (remove dashes/colons) and use it as the unique ID
+        clean_mac = coordinator.api.mac.replace("-", "").replace(":", "")
+        self._attr_unique_id = f"{clean_mac}_remote"
+
+
         self._state_map = {
             "Power": lambda: self.toggled_state(),
             "Stop": STATE_IDLE,
@@ -79,11 +81,8 @@ class SonyRemoteEntity(CoordinatorEntity[SonyCoordinator], RemoteEntity):
             "Replay": STATE_PLAYING,
             "Home": STATE_IDLE      
         }
-
-        try:
-            self.update()
-        except Exception:  # pylint: disable=broad-except
-            self._state = STATE_OFF
+        self._attr_state = STATE_OFF
+        self.update()
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -95,35 +94,16 @@ class SonyRemoteEntity(CoordinatorEntity[SonyCoordinator], RemoteEntity):
             },
             name=self.coordinator.api.nickname,
             manufacturer="Sony",
-            model=self.coordinator.api.client_id
+            model="UBP-X800"
         )
 
-    @property
-    def unique_id(self) -> str | None:
-        return self._unique_id
-    
     def toggled_state(self):
-        return STATE_ON if self._state == STATE_OFF else STATE_IDLE
+        return STATE_ON if self._attr_state == STATE_OFF else STATE_IDLE
 
     def update(self):
         """Update TV info."""
-        _LOGGER.debug("Sony media player update %s", self.coordinator.data)
-        self._state = self.coordinator.data.get("state", None)
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self.coordinator.api.nickname
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return self._attr_supported_features
+        _LOGGER.debug("Sony remote control update %s", self.coordinator.data)
+        self._attr_state = self.coordinator.data.get("state", STATE_OFF)
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
@@ -141,7 +121,7 @@ class SonyRemoteEntity(CoordinatorEntity[SonyCoordinator], RemoteEntity):
 
     async def async_toggle(self, activity: str = None, **kwargs):
         """Toggle a device."""
-        if self._state == STATE_OFF:
+        if self._attr_state == STATE_OFF:
             await self.async_turn_on()
         else:
             await self.async_turn_off()
@@ -150,13 +130,13 @@ class SonyRemoteEntity(CoordinatorEntity[SonyCoordinator], RemoteEntity):
         """Send commands to one device."""
         num_repeats = kwargs.get(ATTR_NUM_REPEATS, DEFAULT_NUM_REPEATS)
         delay_secs = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
-        hold_secs = kwargs.get(ATTR_HOLD_SECS, DEFAULT_HOLD_SECS)
+        # hold_secs = kwargs.get(ATTR_HOLD_SECS, DEFAULT_HOLD_SECS)
         _LOGGER.debug("async_send_command %s %d repeats %d delay", ''.join(list(command)), num_repeats, delay_secs)
 
         for _ in range(num_repeats):
             for single_command in command:
-                if not single_command in self.coordinator.api.commands:
-                    return
+                if single_command not in self.coordinator.api.commands:
+                    continue
                 if (state := self._state_map.get(single_command)) is not None:
                     await self.coordinator.device_data.async_check_device_status(
                         state() if callable(state) else state,
@@ -172,4 +152,4 @@ class SonyRemoteEntity(CoordinatorEntity[SonyCoordinator], RemoteEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.update()
-        return super()._handle_coordinator_update()
+        self.async_write_ha_state()

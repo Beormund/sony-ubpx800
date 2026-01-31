@@ -50,6 +50,9 @@ class SonyMediaPlayerEntity(CoordinatorEntity[SonyCoordinator], MediaPlayerEntit
     # pylint: disable=too-many-instance-attributes
     """Representation of a Sony mediaplayer."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, coordinator):
         """
         Initialize the Sony mediaplayer device.
@@ -60,12 +63,12 @@ class SonyMediaPlayerEntity(CoordinatorEntity[SonyCoordinator], MediaPlayerEntit
         self.coordinator = coordinator
         self._attr_state = MediaPlayerState.OFF
         self._attr_supported_features = SUPPORT_SONY
-        self._unique_id = ENTITY_ID_FORMAT.format(
-            f"{self.coordinator.api.host}_media_player")
-        try:
-            self.update()
-        except Exception:  # pylint: disable=broad-except
-            self._attr_state = MediaPlayerState.OFF
+
+        # Clean the MAC address (remove dashes/colons) and use it as the unique ID
+        clean_mac = coordinator.api.mac.replace("-", "").replace(":", "")
+        self._attr_unique_id = f"{clean_mac}_media_player"
+
+        self.update()
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -77,26 +80,18 @@ class SonyMediaPlayerEntity(CoordinatorEntity[SonyCoordinator], MediaPlayerEntit
             },
             name=self.coordinator.api.nickname,
             manufacturer="Sony",
-            model=self.coordinator.api.client_id
+            model="UBP-X800", # Better to hardcode model if client_id is messy
         )
-
-    @property
-    def unique_id(self) -> str | None:
-        return self._unique_id
 
     def update(self):
         """Update player info."""
         _LOGGER.debug("Sony media player update %s", self.coordinator.data)
-        self._attr_state = self.coordinator.data.get("state")
+        self._attr_state = self.coordinator.data.get("state", MediaPlayerState.OFF)
         if (position_info := self.coordinator.data.get("position_info")) is not None:
-            self._attr_media_duration = self._time_to_seconds(position_info["duration"])
-            self._attr_media_position = self._time_to_seconds(position_info["position"])
-            self._attr_media_position_updated_at = dt_util.utcnow()
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self.coordinator.api.nickname
+            if "duration" in position_info and "position" in position_info:
+                self._attr_media_duration = self._time_to_seconds(position_info["duration"])
+                self._attr_media_position = self._time_to_seconds(position_info["position"])
+                self._attr_media_position_updated_at = dt_util.utcnow()
 
     def _time_to_seconds(self, time_str):
         # API returns duration/position as "HH:MM:SS" string
@@ -165,4 +160,4 @@ class SonyMediaPlayerEntity(CoordinatorEntity[SonyCoordinator], MediaPlayerEntit
         """Handle updated data from the coordinator."""
         # Update only if activity changed
         self.update()
-        return super()._handle_coordinator_update()
+        self.async_write_ha_state()
