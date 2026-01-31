@@ -1,5 +1,5 @@
 {
-  "domain": "sony",
+  "domain": "sony_ubpx800",
   "name": "Sony UBP-X800",
   "config_flow": true,
   "documentation": "https://github.com/Beormund/sony-ubpx800",

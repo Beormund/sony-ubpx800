@@ -3,7 +3,7 @@ send_command:
   description: Sends a specific remote control command to the Sony UBP-X800.
   target:
     entity:
-      integration: sony
+      integration: sony_ubpx800
       domain: remote
   fields:
     command:

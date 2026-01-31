@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from .device import SonyDevice, AuthenticationResult
 from .sony_config import SonyConfigData
 
-from .const import DOMAIN, CONF_NAME, CONF_HOST, CONF_APP_PORT, CONF_IRCC_PORT, CONF_DMR_PORT, SONY_COORDINATOR, \
+from .const import DOMAIN, CONF_HOST, CONF_APP_PORT, CONF_IRCC_PORT, CONF_DMR_PORT, SONY_COORDINATOR, \
     SONY_API, DEFAULT_DEVICE_NAME
 from .coordinator import SonyCoordinator
 

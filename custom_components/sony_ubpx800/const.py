@@ -1,13 +1,12 @@
 """Constants for the Sony integration."""
 from datetime import timedelta
 
-DOMAIN = "sony"
+DOMAIN = "sony_ubpx800"
 
-CONF_NAME = "sony"
 DEVICE_SCAN_INTERVAL = timedelta(seconds=60)
 SONY_COORDINATOR = "sony_coordinator"
 SONY_API = "sony_api"
-DEFAULT_DEVICE_NAME = "Sony UBPX800"
+DEFAULT_DEVICE_NAME = "Sony UBP-X800"
 
 CONF_HOST = "host"
 CONF_PIN = "pin"
